@@ -4,7 +4,7 @@ FROM ubuntu:16.04
 RUN apt update && \
 	apt-get install -y build-essential wget unzip python2.7 \
 	python-dev git python-pip bats awscli curl ncbi-blast+ \
-	lbzip2 pigz autoconf autogen
+	lbzip2 pigz autoconf autogen libssl-dev
 
 # Use /share as the working directory
 RUN mkdir /share
@@ -48,4 +48,29 @@ RUN cd /usr && \
 # Install zstd
 RUN cd /usr && \
 	git clone https://github.com/facebook/zstd.git && \
+	cd zstd && \
 	make install
+
+# Install modules from CPAN
+RUN cpan App::cpanminus && \
+	cpanm Net::SSLeay \
+	OpenSourceOrg::API \
+	Text::Levenshtein::Damerau::XS \
+	Text::Levenshtein::XS
+
+RUN cpanm --force Sereal \
+	Sereal::Decoder \
+	Compress::Zstd \
+	POSIX::1003::Sysconf \
+	POSIX::RT::Semaphore \
+	RocksDB
+
+RUN cd /etc/perl && \
+	wget http://korflab.ucdavis.edu/Unix_and_Perl/FAlite.pm && \
+	chmod +x FAlite.pm
+
+RUN cd /usr/local/bin/ && \
+	git clone https://github.com/cmmr/virmap.git && \
+	cd virmap && \
+	export PATH=$PATH:$PWD && \
+	Virmap.pl --help
